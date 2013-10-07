@@ -22,14 +22,15 @@ namespace WpfApplication2
     {
         Random rand = new Random();
         Dictionary<int, Ellipse> ellipses = new Dictionary<int, Ellipse>();
+        int? currentID;
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        private void AddTouch(TouchPoint p)
+        private void AddTouch(int id, Point p)
         {
-            if (!ellipses.ContainsKey(p.TouchDevice.Id))
+            if (!ellipses.ContainsKey(id))
             {
                 var ellipse = new Ellipse();
                 ellipse.Fill = new SolidColorBrush(Color.FromRgb((byte)rand.Next(0, 256), (byte)rand.Next(0, 256), (byte)rand.Next(0, 256)));
@@ -38,22 +39,22 @@ namespace WpfApplication2
                 ellipse.Width = 10;
                 ellipse.Height = 10;
                 canv.Children.Add(ellipse);
-                Canvas.SetLeft(ellipse, p.Position.X - 5);
-                Canvas.SetTop(ellipse, p.Position.Y - 5);
-                ellipses.Add(p.TouchDevice.Id, ellipse);
+                Canvas.SetLeft(ellipse, p.X - 5);
+                Canvas.SetTop(ellipse, p.Y - 5);
+                ellipses.Add(id, ellipse);
             }
         }
 
-        private void MoveTouch(TouchPoint p)
+        private void MoveTouch(int id, Point p)
         {
-            if (ellipses.ContainsKey(p.TouchDevice.Id))
+            if (ellipses.ContainsKey(id))
             {
-                var ellipse = ellipses[p.TouchDevice.Id];
+                var ellipse = ellipses[id];
 
                 var x = Canvas.GetLeft(ellipse) + ellipse.Width / 2;
                 var y = Canvas.GetTop(ellipse) + ellipse.Height / 2;
-                var dx = Math.Abs(p.Position.X - x);
-                var dy = Math.Abs(p.Position.Y - y);
+                var dx = Math.Abs(p.X - x);
+                var dy = Math.Abs(p.Y - y);
                 Canvas.SetLeft(ellipse, x - dx);
                 Canvas.SetTop(ellipse, y - dy);
                 ellipse.Width = dx * 2;
@@ -61,27 +62,53 @@ namespace WpfApplication2
             }
         }
 
-        private void RemoveTouch(TouchPoint p)
+        private void RemoveTouch(int id, Point p)
         {
-            if (ellipses.ContainsKey(p.TouchDevice.Id))
-            {
-                ellipses.Remove(p.TouchDevice.Id);
-            }
+            if (ellipses.ContainsKey(id))
+                ellipses.Remove(id);
         }
 
         private void canv_TouchDown(object sender, TouchEventArgs e)
         {
-            AddTouch(e.GetTouchPoint(canv));
+            var p = e.GetTouchPoint(canv);
+            AddTouch(p.TouchDevice.Id, p.Position);
         }
 
         private void canv_TouchMove(object sender, TouchEventArgs e)
         {
-            MoveTouch(e.GetTouchPoint(canv));
+            var p = e.GetTouchPoint(canv);
+            MoveTouch(p.TouchDevice.Id, p.Position);
         }
 
         private void canv_TouchUp(object sender, TouchEventArgs e)
         {
-            RemoveTouch(e.GetTouchPoint(canv));
+            var p = e.GetTouchPoint(canv);
+            RemoveTouch(p.TouchDevice.Id, p.Position);
+        }
+
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            int id = ellipses.Count == 0 
+                ? 1
+                : ellipses.Keys.Max() + 1;
+
+            AddTouch(id, e.GetPosition(canv));
+
+            currentID = id;
+        }
+        private void Window_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (currentID.HasValue)
+                MoveTouch(currentID.Value, e.GetPosition(canv));
+        }
+
+        private void Window_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if(currentID.HasValue)
+            {
+                RemoveTouch(currentID.Value, e.GetPosition(canv));
+                currentID = null;
+            }
         }
     }
 }

@@ -7,7 +7,7 @@
             TouchDown="canv_TouchDown" 
             TouchMove="canv_TouchMove"
             TouchUp="canv_TouchUp"
-    Stylus.IsPressAndHoldEnabled="False" WindowState="Maximized">
+    Stylus.IsPressAndHoldEnabled="False" WindowState="Maximized" MouseDown="Window_MouseDown" MouseUp="Window_MouseUp" MouseMove="Window_MouseMove">
 
     <Canvas Name="canv"
             TouchMove="canv_TouchMove">
